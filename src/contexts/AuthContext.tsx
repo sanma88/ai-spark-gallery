@@ -47,21 +47,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Setup session expiry detection
     const checkSessionExpiry = () => {
-      const currentSession = supabase.auth.session();
-      if (currentSession?.expires_at) {
-        const expiresAt = new Date(currentSession.expires_at * 1000);
-        const now = new Date();
-        const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-        
-        if (expiresAt < now) {
-          toast.error("Votre session a expiré. Veuillez vous reconnecter.");
-          signOut();
-        } else if (expiresAt < fiveMinutesFromNow) {
-          // Refresh token if it's about to expire
-          supabase.auth.refreshSession();
-          toast.info("Votre session a été prolongée");
+      // Get current session using getSession instead of directly accessing it
+      supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+        if (currentSession?.expires_at) {
+          const expiresAt = new Date(currentSession.expires_at * 1000);
+          const now = new Date();
+          const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+          
+          if (expiresAt < now) {
+            toast.error("Votre session a expiré. Veuillez vous reconnecter.");
+            signOut();
+          } else if (expiresAt < fiveMinutesFromNow) {
+            // Refresh token if it's about to expire
+            supabase.auth.refreshSession();
+            toast.info("Votre session a été prolongée");
+          }
         }
-      }
+      });
     };
 
     // Check session expiry every minute
