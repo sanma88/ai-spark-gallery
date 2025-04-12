@@ -36,6 +36,20 @@ const EditProjectPage = () => {
     navigate("/admin");
   };
 
+  // Convert the project data to match the expected format for ProjectEditForm
+  const formatProjectForForm = (projectData: any) => {
+    if (!projectData) return null;
+    
+    return {
+      title: projectData.title,
+      description: projectData.description,
+      url: projectData.url,
+      image_url: projectData.image_url,
+      tags: Array.isArray(projectData.tags) ? projectData.tags.join(', ') : '',
+      featured: projectData.featured || false
+    };
+  };
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto px-4 py-8">
@@ -60,7 +74,7 @@ const EditProjectPage = () => {
         ) : project ? (
           <ProjectEditForm
             projectId={id!}
-            initialData={project}
+            initialData={formatProjectForForm(project)}
             onSuccess={handleSuccess}
           />
         ) : (
