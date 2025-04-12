@@ -35,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Si l'utilisateur se déconnecte, naviguer vers la page d'accueil
+        if (event === 'SIGNED_OUT') {
+          navigate("/");
+        }
       }
     );
 
@@ -59,8 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signOut();
           } else if (expiresAt < fiveMinutesFromNow) {
             // Refresh token if it's about to expire
-            supabase.auth.refreshSession();
-            toast.info("Votre session a été prolongée");
+            supabase.auth.refreshSession().then(({ data, error }) => {
+              if (!error && data.session) {
+                toast.info("Votre session a été prolongée");
+              } else if (error) {
+                console.error("Error refreshing session:", error);
+                toast.error("Impossible de prolonger votre session. Veuillez vous reconnecter.");
+                signOut();
+              }
+            });
           }
         }
       });
@@ -73,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
       clearInterval(intervalId);
     };
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -105,11 +117,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Increment login attempts on failure
         sessionStorage.setItem(`loginAttempts_${email}`, (attempts + 1).toString());
         sessionStorage.setItem(`lastLoginAttempt_${email}`, new Date().getTime().toString());
+        return { data, error };
       } else if (data?.session) {
         // Reset login attempts on success
         sessionStorage.removeItem(`loginAttempts_${email}`);
         sessionStorage.removeItem(`lastLoginAttempt_${email}`);
-        navigate("/admin");
+        
+        // La navigation se fera dans le hook useEffect du composant LoginPage
+        return { data, error: null };
       }
       
       return { data, error };
@@ -119,8 +134,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+      toast.error("Une erreur s'est produite lors de la déconnexion");
+    } else {
+      // Navigation handled by onAuthStateChange
+    }
   };
   
   // Add reset password functionality

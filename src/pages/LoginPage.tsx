@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
@@ -31,11 +31,12 @@ const LoginPage = () => {
   const { signIn, user, resetPassword } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  if (user) {
-    navigate("/admin");
-    return null;
-  }
+  // Utiliser useEffect pour rediriger si déjà connecté
+  useEffect(() => {
+    if (user) {
+      navigate("/admin");
+    }
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,6 +88,11 @@ const LoginPage = () => {
     setAuthMode(authMode === AuthMode.LOGIN ? AuthMode.FORGOT_PASSWORD : AuthMode.LOGIN);
     setEmailSent(false);
   };
+
+  // Si l'utilisateur est déjà connecté, ne pas afficher le formulaire
+  if (user) {
+    return null; // Ne rien afficher pendant la redirection
+  }
 
   return (
     <div className="min-h-screen flex justify-center items-center py-16 px-4">
