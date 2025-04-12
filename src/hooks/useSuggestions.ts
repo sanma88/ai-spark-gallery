@@ -31,3 +31,30 @@ export const useSuggestions = () => {
     }
   });
 };
+
+export const useSuggestion = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ["suggestion", id],
+    queryFn: async (): Promise<Suggestion | null> => {
+      if (!id) return null;
+      
+      const { data, error } = await supabase
+        .from("suggestions")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // PGRST116 means not found
+          return null;
+        }
+        console.error("Error fetching suggestion:", error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+    enabled: !!id
+  });
+};

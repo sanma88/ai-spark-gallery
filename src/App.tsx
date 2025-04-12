@@ -11,6 +11,7 @@ import FeaturedPage from "./pages/FeaturedPage";
 import SuggestPage from "./pages/SuggestPage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
+import EditProjectPage from "./pages/EditProjectPage";
 import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -41,6 +42,10 @@ const App = () => (
                     <AdminPage />
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+                path="/edit-project/:id" 
+                element={<EditProjectPage />} 
               />
               <Route path="/about" element={<AboutPage />} />
               <Route path="*" element={<NotFound />} />

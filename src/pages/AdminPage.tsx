@@ -1,21 +1,34 @@
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, Check, X } from "lucide-react";
+import { PlusCircle, LogOut, Check, X, Edit, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
 import { useState } from "react";
-import { useSuggestions } from "@/hooks/useSuggestions";
+import { useSuggestions, Suggestion } from "@/hooks/useSuggestions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import ProjectForm from "@/components/ProjectForm";
+import SuggestionEditForm from "@/components/SuggestionEditForm";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const AdminPage = () => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { data: projects } = useProjects();
   const { data: suggestions, isLoading: suggestionsLoading } = useSuggestions();
   const [isAddingProject, setIsAddingProject] = useState(false);
+  const [editingSuggestion, setEditingSuggestion] = useState<Suggestion | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
   const featuredCount = projects?.filter(p => p.featured).length || 0;
@@ -25,6 +38,44 @@ const AdminPage = () => {
   const handleLogout = () => {
     signOut();
     toast.success("Déconnexion réussie");
+  };
+
+  const handleEditProject = (id: string) => {
+    navigate(`/edit-project/${id}`);
+  };
+
+  const handleEditSuggestion = (suggestion: Suggestion) => {
+    setEditingSuggestion(suggestion);
+  };
+
+  const handleSaveSuggestion = async (values: any) => {
+    if (!editingSuggestion) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      const { error } = await supabase
+        .from("suggestions")
+        .update({
+          name: values.name,
+          description: values.description,
+          project_url: values.project_url,
+          tags: values.tags,
+          email: values.email,
+        })
+        .eq("id", editingSuggestion.id);
+      
+      if (error) throw error;
+      
+      toast.success("Suggestion mise à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ["suggestions"] });
+      setEditingSuggestion(null);
+    } catch (error) {
+      console.error("Error updating suggestion:", error);
+      toast.error("Erreur lors de la mise à jour de la suggestion");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleApproveSuggestion = async (id: string) => {
@@ -128,6 +179,75 @@ const AdminPage = () => {
           </div>
         </div>
 
+        {/* Liste des projets existants */}
+        <div className="bg-card p-6 rounded-xl shadow-sm border border-border mb-8">
+          <h3 className="text-xl font-medium mb-4">Projets publiés</h3>
+          <p className="text-muted-foreground mb-4">
+            Liste des projets actuellement publiés dans la galerie. Vous pouvez les modifier ou les supprimer.
+          </p>
+          
+          {projects && projects.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Titre</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Coup de cœur</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {projects.map((project) => (
+                      <TableRow key={project.id}>
+                        <TableCell className="font-medium">{project.title}</TableCell>
+                        <TableCell className="truncate max-w-[200px]">
+                          <a 
+                            href={project.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {project.url}
+                          </a>
+                        </TableCell>
+                        <TableCell>{project.featured ? "Oui" : "Non"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mr-2"
+                            onClick={() => handleEditProject(project.id)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <a href={project.url} target="_blank" rel="noopener noreferrer">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </a>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 border rounded-lg">
+              <p className="text-muted-foreground">Aucun projet publié pour le moment.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Liste des suggestions */}
         <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
           <h3 className="text-xl font-medium mb-4">Suggestions en attente</h3>
           <p className="text-muted-foreground mb-4">
@@ -139,23 +259,23 @@ const AdminPage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
               <p className="mt-4 text-muted-foreground">Chargement des suggestions...</p>
             </div>
-          ) : suggestions && suggestions.length > 0 ? (
+          ) : suggestions && suggestions.filter(s => s.status === 'pending').length > 0 ? (
             <div className="border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Nom</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">URL</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Contact</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {suggestions.filter(s => s.status === 'pending').map((suggestion) => (
-                      <tr key={suggestion.id}>
-                        <td className="px-4 py-3 text-sm">{suggestion.name}</td>
-                        <td className="px-4 py-3 text-sm truncate max-w-[200px]">
+                      <TableRow key={suggestion.id}>
+                        <TableCell className="font-medium">{suggestion.name}</TableCell>
+                        <TableCell className="truncate max-w-[200px]">
                           <a 
                             href={suggestion.project_url} 
                             target="_blank" 
@@ -164,9 +284,18 @@ const AdminPage = () => {
                           >
                             {suggestion.project_url}
                           </a>
-                        </td>
-                        <td className="px-4 py-3 text-sm">{suggestion.email || "-"}</td>
-                        <td className="px-4 py-3 text-right">
+                        </TableCell>
+                        <TableCell>{suggestion.email || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mr-2"
+                            onClick={() => handleEditSuggestion(suggestion)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Éditer
+                          </Button>
                           <Button 
                             variant="default" 
                             size="sm" 
@@ -184,11 +313,11 @@ const AdminPage = () => {
                             <X className="h-4 w-4 mr-1" />
                             Rejeter
                           </Button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           ) : (
@@ -199,10 +328,28 @@ const AdminPage = () => {
         </div>
       </div>
 
+      {/* Modales */}
       <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
         <DialogContent className="max-w-md sm:max-w-xl">
           <DialogTitle className="text-center">Ajouter un nouveau projet</DialogTitle>
           <ProjectForm onSuccess={() => setIsAddingProject(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog 
+        open={!!editingSuggestion} 
+        onOpenChange={(open) => !open && setEditingSuggestion(null)}
+      >
+        <DialogContent className="max-w-md sm:max-w-xl">
+          <DialogTitle className="text-center">Éditer la suggestion</DialogTitle>
+          {editingSuggestion && (
+            <SuggestionEditForm 
+              suggestion={editingSuggestion}
+              onSave={handleSaveSuggestion}
+              onCancel={() => setEditingSuggestion(null)}
+              isSubmitting={isSubmitting}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
