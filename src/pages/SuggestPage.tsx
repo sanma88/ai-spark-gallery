@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SuggestionFormData {
   name: string;
-  projectUrl: string;
+  project_url: string;
   description: string;
   email: string;
   tags: string;
@@ -17,7 +18,7 @@ interface SuggestionFormData {
 
 const initialFormData: SuggestionFormData = {
   name: "",
-  projectUrl: "",
+  project_url: "",
   description: "",
   email: "",
   tags: ""
@@ -35,12 +36,24 @@ const SuggestPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const { error } = await supabase
+        .from('suggestions')
+        .insert({
+          name: formData.name,
+          project_url: formData.project_url,
+          description: formData.description,
+          email: formData.email || null,
+          tags: formData.tags || null,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+      
       setIsSubmitting(false);
       setIsSuccess(true);
       toast.success("Votre suggestion a été envoyée avec succès !");
@@ -49,7 +62,11 @@ const SuggestPage = () => {
       setTimeout(() => {
         setIsSuccess(false);
       }, 3000);
-    }, 1500);
+    } catch (error) {
+      console.error("Error submitting suggestion:", error);
+      toast.error("Une erreur est survenue lors de l'envoi de votre suggestion");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -81,11 +98,11 @@ const SuggestPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="projectUrl">URL du projet *</Label>
+              <Label htmlFor="project_url">URL du projet *</Label>
               <Input
-                id="projectUrl"
-                name="projectUrl"
-                value={formData.projectUrl}
+                id="project_url"
+                name="project_url"
+                value={formData.project_url}
                 onChange={handleChange}
                 placeholder="https://exemple.com"
                 type="url"

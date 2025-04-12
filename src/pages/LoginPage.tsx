@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Lock, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 interface LoginFormData {
@@ -18,30 +19,35 @@ const LoginPage = () => {
     password: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/admin");
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate authentication (would connect to backend in a real app)
-    setTimeout(() => {
-      // For the demo, let's just accept a simple admin/admin combo
-      if (formData.email === "admin@example.com" && formData.password === "adminpassword") {
-        toast.success("Connexion réussie !");
-        // In a real app, you'd save auth token here
-        localStorage.setItem("isAuthenticated", "true");
-        navigate("/admin");
-      } else {
+    try {
+      const { error } = await signIn(formData.email, formData.password);
+      
+      if (error) {
         toast.error("Identifiants incorrects");
       }
+    } catch (error) {
+      toast.error("Une erreur est survenue lors de la connexion");
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -106,7 +112,7 @@ const LoginPage = () => {
         </form>
         
         <div className="mt-4 text-sm text-center text-muted-foreground">
-          <p>Pour la démo : admin@example.com / adminpassword</p>
+          <p>Contactez l'administrateur du site pour obtenir des identifiants.</p>
         </div>
       </div>
     </div>
