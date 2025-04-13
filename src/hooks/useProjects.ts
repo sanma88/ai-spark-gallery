@@ -23,6 +23,7 @@ export const useProjects = () => {
         description: item.description,
         imageUrl: item.image_url,
         url: item.url,
+        docsUrl: item.docs_url || undefined, // Récupération de l'URL de documentation
         tags: item.tags || [],
         featured: item.featured || false
       }));
@@ -51,6 +52,7 @@ export const useFeaturedProjects = () => {
         description: item.description,
         imageUrl: item.image_url,
         url: item.url,
+        docsUrl: item.docs_url || undefined, // Récupération de l'URL de documentation
         tags: item.tags || [],
         featured: item.featured || false
       }));
