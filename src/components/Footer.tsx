@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} AI Spark Gallery. Tous droits réservés.
+              © {new Date().getFullYear()} AI2Share. Tous droits réservés.
             </p>
           </div>
           

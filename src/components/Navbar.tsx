@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">AI Spark Gallery</span>
+            <span className="text-xl font-bold">AI2Share</span>
           </Link>
 
           {/* Desktop Navigation */}

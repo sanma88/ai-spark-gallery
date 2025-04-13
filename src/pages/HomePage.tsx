@@ -14,7 +14,7 @@ const HomePage = () => {
             Découvrez l'innovation en IA
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Une curation des projets les plus impressionnants et inspirants dans le domaine de l'intelligence artificielle.
+            Un recensement des projets les plus impressionnants et inspirants dans le domaine de l'intelligence artificielle.
           </p>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -12,7 +11,7 @@ const AboutPage = () => {
             À propos
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Découvrez l'histoire et la mission d'AI Spark Gallery
+            Découvrez l'histoire et la mission d'AI2Share
           </p>
         </div>
       </div>
@@ -25,7 +24,7 @@ const AboutPage = () => {
               Notre mission
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              AI Spark Gallery est né d'une passion pour l'innovation dans le domaine de l'intelligence artificielle. 
+              AI2Share est né d'une passion pour l'innovation dans le domaine de l'intelligence artificielle. 
               Notre mission est de mettre en lumière les projets d'IA les plus créatifs, utiles et inspirants 
               pour aider les curieux, les professionnels et les passionnés à découvrir les nouvelles frontières 
               de cette technologie en constante évolution.
@@ -68,7 +67,7 @@ const AboutPage = () => {
 
           <div className="pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground italic">
-              AI Spark Gallery est un projet indépendant, créé avec passion et dédié 
+              AI2Share est un projet indépendant, créé avec passion et dédié 
               à la communauté des enthousiastes de l'intelligence artificielle.
             </p>
           </div>
