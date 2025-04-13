@@ -1,6 +1,5 @@
 
 import { ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export interface Project {
   id: string;
@@ -8,7 +7,7 @@ export interface Project {
   description: string;
   imageUrl: string;
   url: string;
-  docsUrl?: string; // Nouvelle propriété pour l'URL de documentation
+  docsUrl?: string;
   tags: string[];
   featured?: boolean;
 }
@@ -41,36 +40,12 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
         <h3 className="font-bold text-lg mb-1">{project.title}</h3>
         <p className="text-muted-foreground text-sm line-clamp-2 mb-2">{project.description}</p>
         
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2">
           {project.tags.map((tag) => (
             <span key={tag} className="tag">
               {tag}
             </span>
           ))}
-        </div>
-
-        <div className="flex justify-between items-center text-xs">
-          <a 
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-primary underline decoration-primary decoration-1 underline-offset-2 hover:text-primary/80 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            Projet <ExternalLink size={12} />
-          </a>
-          
-          {project.docsUrl && (
-            <a 
-              href={project.docsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-primary underline decoration-primary decoration-1 underline-offset-2 hover:text-primary/80 transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Documentation <ExternalLink size={12} />
-            </a>
-          )}
         </div>
       </div>
     </div>
