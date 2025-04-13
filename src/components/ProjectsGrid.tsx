@@ -1,9 +1,16 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectCard, { Project } from './ProjectCard';
 import { Button } from "@/components/ui/button";
-import { Shuffle, Search, X } from "lucide-react";
+import { Shuffle, Search, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ProjectsGridProps {
   projects: Project[];
@@ -23,9 +30,25 @@ const ProjectsGrid = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [randomIndex, setRandomIndex] = useState<number | null>(null);
+  const [displayedTags, setDisplayedTags] = useState<string[]>([]);
 
   // Extract all unique tags
   const allTags = [...new Set(projects.flatMap(project => project.tags))];
+
+  // Determine which tags to display based on a maximum threshold
+  useEffect(() => {
+    if (allTags.length > 0) {
+      // Limit displayed tags to 5 most commonly used tags
+      const tagCounts = allTags.reduce((acc, tag) => {
+        const count = projects.filter(project => project.tags.includes(tag)).length;
+        acc[tag] = count;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const sortedTags = [...allTags].sort((a, b) => tagCounts[b] - tagCounts[a]);
+      setDisplayedTags(sortedTags.slice(0, 5));
+    }
+  }, [projects, allTags]);
 
   // Filter projects based on search term and selected tag
   const filteredProjects = projects.filter(project => {
@@ -37,20 +60,27 @@ const ProjectsGrid = ({
 
   const getRandomProject = () => {
     if (filteredProjects.length === 0) return;
-    const newIndex = Math.floor(Math.random() * filteredProjects.length);
-    setRandomIndex(newIndex);
     
-    // Scroll to the random project
+    // Clear previous random state
+    setRandomIndex(null);
+    
+    // Set new random index with slight delay to ensure animation triggers
     setTimeout(() => {
-      const element = document.getElementById(`project-${filteredProjects[newIndex].id}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('animate-pulse-glow');
-        setTimeout(() => {
-          element.classList.remove('animate-pulse-glow');
-        }, 2000);
-      }
-    }, 100);
+      const newIndex = Math.floor(Math.random() * filteredProjects.length);
+      setRandomIndex(newIndex);
+      
+      // Scroll to the random project
+      setTimeout(() => {
+        const element = document.getElementById(`project-${filteredProjects[newIndex].id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('random-project-highlight');
+          setTimeout(() => {
+            element.classList.remove('random-project-highlight');
+          }, 2000);
+        }
+      }, 100);
+    }, 50);
   };
 
   return (
@@ -85,7 +115,7 @@ const ProjectsGrid = ({
             )}
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button
               variant={selectedTag === '' ? "default" : "outline"}
               className="rounded-full text-xs h-8"
@@ -93,7 +123,9 @@ const ProjectsGrid = ({
             >
               Tous
             </Button>
-            {allTags.map(tag => (
+            
+            {/* Display a few common tags directly */}
+            {displayedTags.map(tag => (
               <Button
                 key={tag}
                 variant={selectedTag === tag ? "default" : "outline"}
@@ -103,6 +135,33 @@ const ProjectsGrid = ({
                 {tag}
               </Button>
             ))}
+            
+            {/* Show dropdown for remaining tags if there are more */}
+            {allTags.length > displayedTags.length && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="rounded-full text-xs h-8">
+                    Plus de tags <ChevronDown className="ml-1 h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuGroup>
+                    {allTags
+                      .filter(tag => !displayedTags.includes(tag))
+                      .sort()
+                      .map(tag => (
+                        <DropdownMenuItem 
+                          key={tag}
+                          className={selectedTag === tag ? "bg-primary/10" : ""}
+                          onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
+                        >
+                          {tag}
+                        </DropdownMenuItem>
+                      ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       )}

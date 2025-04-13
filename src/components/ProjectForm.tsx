@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
+import TagInput from "./TagInput";
 
 const projectSchema = z.object({
   title: z.string().min(2, { message: "Le titre doit contenir au moins 2 caractères" }),
@@ -57,7 +58,7 @@ const ProjectForm = ({ onSuccess, initialData }: ProjectFormProps) => {
   const onSubmit = async (values: ProjectFormValues) => {
     try {
       // Convert tags string to array
-      const tagsArray = values.tags.split(',').map(tag => tag.trim());
+      const tagsArray = values.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
       
       const { error } = await supabase
         .from("projects")
@@ -152,9 +153,9 @@ const ProjectForm = ({ onSuccess, initialData }: ProjectFormProps) => {
           name="tags"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tags (séparés par des virgules) *</FormLabel>
+              <FormLabel>Tags *</FormLabel>
               <FormControl>
-                <Input placeholder="Génératif, Images, Art" {...field} />
+                <TagInput value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
